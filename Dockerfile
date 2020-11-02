@@ -21,7 +21,7 @@ RUN apt-get update \
     libedit2 \
     libssl-dev \
     lsb-release \
-    multiarch-support \
+##  multiarch-support \
     psmisc \
     procps \
     python-setuptools \
