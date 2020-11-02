@@ -1,22 +1,39 @@
-## Use a tag instead of "latest" for reproducibility
-FROM rocker/binder:latest
+FROM jupyter/r-notebook:95ccda3619d0 # or datascience-notebook
+# install nbrsessionproxy extension
+RUN conda install -yq -c conda-forge jupyter-server-proxy jupyter-rsession-proxy && \
+    conda clean -tipsy
 
-## Declares build arguments
-ARG NB_USER
-ARG NB_UID
+ARG RSTUDIO_VERSION
+ENV RSTUDIO_VERSION=${RSTUDIO_VERSION:-1.2.5042}
 
-## Copies your repo files into the Docker Container
+## Download and install RStudio server & dependencies
+## Attempts to get detect latest version, otherwise falls back to version given in $VER
+## Symlink pandoc, pandoc-citeproc so they are available system-wide
+## install rstudio-server
 USER root
-COPY . ${HOME}
-## Enable this to copy files from the binder subdirectory
-## to the home, overriding any existing files.
-## Useful to create a setup on binder that is different from a
-## clone of your repository
-## COPY binder ${HOME}
-RUN chown -R ${NB_USER} ${HOME}
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    file \
+    git \
+    libapparmor1 \
+    libclang-dev \
+    libcurl4-openssl-dev \
+    libedit2 \
+    libssl-dev \
+    lsb-release \
+    multiarch-support \
+    psmisc \
+    procps \
+    python-setuptools \
+    sudo \
+    wget \
+  && if [ -z "$RSTUDIO_VERSION" ]; \
+    then RSTUDIO_URL="https://www.rstudio.org/download/latest/stable/server/bionic/rstudio-server-latest-amd64.deb"; \
+    else RSTUDIO_URL="http://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb"; fi \
+  && wget -q $RSTUDIO_URL \
+  && dpkg -i rstudio-server-*-amd64.deb \
+  && rm rstudio-server-*-amd64.deb \
 
-## Become normal user again
-USER ${NB_USER}
-
-## Run an install.R script, if it exists.
-RUN if [ -f install.R ]; then R --quiet -f install.R; fi
+ENV PATH=$PATH:/usr/lib/rstudio-server/bin
+USER $NB_USER
+pip install nbgitpuller
