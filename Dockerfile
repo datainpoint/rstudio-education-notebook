@@ -9,7 +9,7 @@ RUN cd /tmp/ && \
 # install rstudio-server
 USER root
 RUN apt-get update && \
-    apt-get install -y gdebi-core
+    apt-get install -y gdebi-core && \
     curl --silent -L --fail https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.3.1093-amd64.deb > /tmp/rstudio.deb && \
     #echo '24cd11f0405d8372b4168fc9956e0386 /tmp/rstudio.deb' | md5sum -c - && \
     gdebi /tmp/rstudio.deb && \
