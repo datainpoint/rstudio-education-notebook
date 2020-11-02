@@ -36,4 +36,4 @@ RUN apt-get update \
 
 ENV PATH=$PATH:/usr/lib/rstudio-server/bin
 USER $NB_USER
-pip install nbgitpuller
+RUN pip install nbgitpuller
