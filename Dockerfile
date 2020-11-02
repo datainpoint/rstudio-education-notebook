@@ -1,21 +1,41 @@
-FROM jupyter/datascience-notebook:95ccda3619d0
+FROM rocker/geospatial:3.6.3
 
-RUN python3 -m pip install jupyter-rsession-proxy jupyter-server-proxy
-RUN cd /tmp/ && \
-    git clone --depth 1 https://github.com/jupyterhub/jupyter-server-proxy && \
-    cd jupyter-server-proxy/jupyterlab-server-proxy && \
-    npm install && npm run build && jupyter labextension link . && \
-    npm run build && jupyter lab build
-# install rstudio-server
-USER root
+ENV NB_USER rstudio
+ENV NB_UID 1000
+ENV VENV_DIR /srv/venv
+
+# Set ENV for all programs...
+ENV PATH ${VENV_DIR}/bin:$PATH
+# And set ENV for R! It doesn't read from the environment...
+RUN echo "PATH=${PATH}" >> /usr/local/lib/R/etc/Renviron
+RUN echo "export PATH=${PATH}" >> ${HOME}/.profile
+
+# The `rsession` binary that is called by nbrsessionproxy to start R doesn't seem to start
+# without this being explicitly set
+ENV LD_LIBRARY_PATH /usr/local/lib/R/lib
+
+ENV HOME /home/${NB_USER}
+WORKDIR ${HOME}
+
 RUN apt-get update && \
-    apt-get install -y libcurl4-openssl-dev &&\
-    apt-get install -y gdebi-core && \
-    curl --silent -L --fail https://download2.rstudio.org/rstudio-server-1.1.419-amd64.deb > /tmp/rstudio.deb && \
-    #echo '24cd11f0405d8372b4168fc9956e0386 /tmp/rstudio.deb' | md5sum -c - && \
-    gdebi /tmp/rstudio.deb && \
-    rm /tmp/rstudio.deb && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-ENV PATH=$PATH:/usr/lib/rstudio-server/bin
-USER $NB_USER
+    apt-get -y install python3-venv python3-dev && \
+    apt-get purge && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a venv dir owned by unprivileged user & set up notebook in it
+# This allows non-root to install python libraries if required
+RUN mkdir -p ${VENV_DIR} && chown -R ${NB_USER} ${VENV_DIR}
+
+USER ${NB_USER}
+RUN python3 -m venv ${VENV_DIR} && \
+    # Explicitly install a new enough version of pip
+    pip3 install pip==9.0.1 && \
+    pip3 install --no-cache-dir \
+         jupyter-rsession-proxy
+
+RUN R --quiet -e "devtools::install_github('IRkernel/IRkernel')" && \
+    R --quiet -e "IRkernel::installspec(prefix='${VENV_DIR}')"
+
+CMD jupyter notebook --ip 0.0.0.0
 RUN pip install nbgitpuller
