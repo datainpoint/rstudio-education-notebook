@@ -13,8 +13,8 @@ ENV RSTUDIO_VERSION=${RSTUDIO_VERSION:-1.2.5042}
 USER root
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-    file \
-    git \
+##  file \
+##  git \
     libapparmor1 \
     libclang-dev \
     libcurl4-openssl-dev \
@@ -25,14 +25,14 @@ RUN apt-get update \
     psmisc \
     procps \
     python-setuptools \
-    sudo \
+##  sudo \
     wget \
   && if [ -z "$RSTUDIO_VERSION" ]; \
     then RSTUDIO_URL="https://www.rstudio.org/download/latest/stable/server/bionic/rstudio-server-latest-amd64.deb"; \
     else RSTUDIO_URL="http://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb"; fi \
   && wget -q $RSTUDIO_URL \
   && dpkg -i rstudio-server-*-amd64.deb \
-  && rm rstudio-server-*-amd64.deb \
+  && rm rstudio-server-*-amd64.deb
 
 ENV PATH=$PATH:/usr/lib/rstudio-server/bin
 USER $NB_USER
