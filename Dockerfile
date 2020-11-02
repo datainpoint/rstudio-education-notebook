@@ -7,12 +7,8 @@ RUN cd /tmp/ && \
     npm install && npm run build && jupyter labextension link . && \
     npm run build && jupyter lab build
 
-USER root
 # install rstudio-server
 USER root
-
-ENV PATH=$PATH:/usr/lib/rstudio-server/bin
-USER $NB_USER
 RUN apt-get update && \
     apt-get -y install libssl1.1 libssl-dev && \
     cd /lib/x86_64-linux-gnu && ln -s libssl.so.1.0.0 libssl.so.10 &&  ln -s libcrypto.so.1.0.0 libcrypto.so.10  && \
