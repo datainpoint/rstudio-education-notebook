@@ -9,7 +9,7 @@ RUN cd /tmp/ && \
 
 USER root
 RUN apt-get update && \
-    apt-get -y install libssl1.0.0 libssl-dev && \
+    apt-get -y install libssl1.1 libssl-dev && \
     cd /lib/x86_64-linux-gnu && ln -s libssl.so.1.0.0 libssl.so.10 &&  ln -s libcrypto.so.1.0.0 libcrypto.so.10  && \
     cd /tmp/ && wget https://download2.rstudio.org/server/trusty/amd64/rstudio-server-1.2.5019-amd64.deb &&\
     apt-get install -y /tmp/rstudio-server-1.2.5019-amd64.deb && \
